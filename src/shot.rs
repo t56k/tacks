@@ -66,7 +66,7 @@ pub struct Shot {
     pub season: i32,
     pub shooter_left_right: String,
     pub shooter_name: String,
-    pub shooter_player_id: f32,
+    pub shooter_player_id: Option<f32>,
     pub shooter_time_on_ice: f32,
     pub shooter_time_on_ice_since_faceoff: f32,
     pub shooting_team_average_time_on_ice: f32,

@@ -11,8 +11,6 @@ fn parse() -> Result<(), Box<dyn Error>> {
         shots.push(shot);
     }
 
-    println!("{:#?}", shots);
-
     Ok(())
 }
 
