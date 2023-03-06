@@ -1,5 +1,8 @@
+#![recursion_limit = "512"]
+
 use diesel::prelude::*;
-use std::{error::Error, io, process};
+use std::{error::Error, io};
+use tacks::establish_connection;
 
 mod models;
 mod schema;
@@ -16,18 +19,16 @@ fn parse_csv() -> Result<Vec<models::NewShot>, Box<dyn Error>> {
     Ok(shots)
 }
 
-pub fn import_shots(conn: &mut PgConnection) -> Vec<models::Shot> {
-    let shots = parse_csv();
+pub fn import_shots(conn: &mut PgConnection) -> Result<(), Box<dyn Error>> {
+    let shots = parse_csv().expect("Can't get shots");
+    diesel::insert_into(schema::shots::table).values(shots);
 
-    diesel::insert_into(shots::table)
-        .values(&shots)
-        .get_results(conn)
-        .expect("Error importing shots")
+    Ok(())
 }
 
 fn main() {
     let connection = &mut establish_connection();
     let shots = import_shots(connection);
 
-    println!("Imported (first): {} with id {}", shots[0], shots[0].id);
+    println!("Imported");
 }

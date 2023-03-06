@@ -1,5 +1,6 @@
 CREATE TABLE shots (
   id SERIAL PRIMARY KEY,
+  shot_id INTEGER NOT NULL,
   arena_adjusted_shot_distance REAL NOT NULL,
   arena_adjusted_x_cord REAL NOT NULL,
   arena_adjusted_x_cord_abs REAL NOT NULL,

@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use crate::schema::shots;
 
-#[derive(Insertable)]
+#[derive(Debug, Insertable, serde::Deserialize)]
 #[diesel(table_name = shots)]
 pub struct NewShot {
     pub shot_id: i32,

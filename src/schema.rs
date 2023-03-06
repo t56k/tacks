@@ -3,6 +3,7 @@
 diesel::table! {
     shots (id) {
         id -> Int4,
+        shot_id -> Int4,
         arena_adjusted_shot_distance -> Float4,
         arena_adjusted_x_cord -> Float4,
         arena_adjusted_x_cord_abs -> Float4,
