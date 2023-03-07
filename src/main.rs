@@ -1,34 +1,45 @@
 #![recursion_limit = "512"]
 
+use anyhow::Result;
 use diesel::prelude::*;
-use std::{error::Error, io};
+use std::io;
 use tacks::establish_connection;
 
 mod models;
 mod schema;
 
-fn parse_csv() -> Result<Vec<models::NewShot>, Box<dyn Error>> {
+fn import_csv(connection: &mut PgConnection) -> Result<Vec<models::Shot>> {
+    use crate::schema::shots::dsl::shots;
+
     let mut csv_reader = csv::Reader::from_reader(io::stdin());
-    let mut shots = vec![];
+    let mut new_shots = vec![];
 
     for result in csv_reader.deserialize() {
-        let shot: models::NewShot = result?;
-        shots.push(shot);
+        let new_shot: models::Shot = result?;
+        new_shots.push(new_shot);
     }
 
-    Ok(shots)
+    diesel::insert_into(shots)
+        .values(&new_shots)
+        .execute(connection)?;
+
+    Ok(new_shots)
 }
 
-pub fn import_shots(conn: &mut PgConnection) -> Result<(), Box<dyn Error>> {
-    let shots = parse_csv().expect("Can't get shots");
-    diesel::insert_into(schema::shots::table).values(shots);
+fn main() -> Result<()> {
+    use crate::schema::shots::dsl::shots;
+
+    let connection = &mut establish_connection();
+    // let shots = import_csv(connection)?;
+
+    let res = shots.limit(5).load::<models::Shot>(connection)?;
+
+    println!("Displaying {} shots", res.len());
+
+    for shot in res {
+        println!("{}", shot.shooter_name);
+        println!("{:#?}", shot.id);
+    }
 
     Ok(())
-}
-
-fn main() {
-    let connection = &mut establish_connection();
-    let shots = import_shots(connection);
-
-    println!("Imported");
 }
