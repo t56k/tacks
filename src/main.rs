@@ -5,17 +5,17 @@ use diesel::prelude::*;
 use std::io;
 use tacks::establish_connection;
 
-mod models;
 mod schema;
+mod shot;
 
-fn import_csv(connection: &mut PgConnection) -> Result<Vec<models::Shot>> {
+fn import_csv(connection: &mut PgConnection) -> Result<Vec<shot::NewShot>> {
     use crate::schema::shots::dsl::shots;
 
     let mut csv_reader = csv::Reader::from_reader(io::stdin());
     let mut new_shots = vec![];
 
     for result in csv_reader.deserialize() {
-        let new_shot: models::Shot = result?;
+        let new_shot: shot::NewShot = result?;
         new_shots.push(new_shot);
     }
 
@@ -30,15 +30,17 @@ fn main() -> Result<()> {
     use crate::schema::shots::dsl::shots;
 
     let connection = &mut establish_connection();
-    // let shots = import_csv(connection)?;
 
-    let res = shots.limit(5).load::<models::Shot>(connection)?;
+    let res = shots.limit(1).load::<shot::Shot>(connection)?;
+    if res.len() < 1 {
+        let _ = import_csv(connection)?;
+    }
 
+    let res = shots.limit(5).load::<shot::Shot>(connection)?;
     println!("Displaying {} shots", res.len());
 
-    for shot in res {
-        println!("{}", shot.shooter_name);
-        println!("{:#?}", shot.id);
+    for s in res {
+        println!("{:#?}", s);
     }
 
     Ok(())
