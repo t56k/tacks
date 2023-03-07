@@ -1,9 +1,9 @@
 use diesel::prelude::*;
+use serde::*;
 
 use crate::schema::shots;
 
 #[derive(Debug, Identifiable, Queryable)]
-#[diesel(table_name = shots)]
 pub struct Shot {
     pub id: i32,
     pub shot_id: i32,
@@ -132,7 +132,7 @@ pub struct Shot {
     pub y_cord_adjusted: i32,
 }
 
-#[derive(Insertable, serde::Deserialize)]
+#[derive(Deserialize, Insertable, PartialEq, Debug)]
 #[diesel(table_name = shots)]
 pub struct NewShot {
     pub shot_id: i32,
