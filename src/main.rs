@@ -5,6 +5,7 @@ use diesel::{insert_into, prelude::*};
 use std::io;
 use tacks::establish_connection;
 
+mod game;
 mod schema;
 mod shot;
 
@@ -38,20 +39,20 @@ fn main() -> Result<()> {
 
     loop {
         let mut input = String::new();
-        println!("who > ");
+        println!("> ");
 
         match io::stdin().read_line(&mut input) {
             Ok(_) => {
-                let mut name = String::new();
-                name = input.trim().to_string();
+                let mut name = input.trim().to_string();
 
                 let results = shots
                     .filter(shooter_name.eq(&name))
                     .load::<shot::Shot>(conn)?;
 
                 for shot_result in results {
-                    println!("{}", shot_result.time);
-                    println!("{}", shot_result.game_id);
+                    println!("Time: {}", shot_result.time);
+                    println!("Game: {}", shot_result.game_id);
+                    println!("Goal: {}", shot_result.goal);
                 }
 
                 name.clear();
