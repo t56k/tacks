@@ -1,14 +1,14 @@
 #![recursion_limit = "512"]
 
 use anyhow::Result;
-use diesel::{insert_into, prelude::*, RunQueryDsl};
+use diesel::{insert_into, prelude::*};
 use std::io;
 use tacks::establish_connection;
 
 mod schema;
 mod shot;
 
-fn import_csv(conn: &mut PgConnection) -> Result<QueryResult<Vec<i32>>> {
+fn import_csv(conn: &mut PgConnection) -> Result<usize> {
     use schema::shots::dsl::*;
 
     let mut csv_reader = csv::Reader::from_path("data/shots_2022_1.csv")?;
@@ -19,34 +19,46 @@ fn import_csv(conn: &mut PgConnection) -> Result<QueryResult<Vec<i32>>> {
         new_shots.push(new_shot);
     }
 
-    Ok(insert_into(shots)
-        .values(&new_shots)
-        .returning(shot_id)
-        .get_results::<i32>(conn))
+    Ok(insert_into(shots).values(&new_shots).execute(conn)?)
 }
 
 fn main() -> Result<()> {
     use schema::shots::dsl::*;
 
     let conn = &mut establish_connection();
-    let _ = import_csv(conn)?;
+    // let recs = import_csv(conn)?;
 
-    let mut buffer = String::new();
-    println!("Enter a shooter: ");
+    let mut shooters = shots.select(shooter_name).load::<String>(conn)?;
+    shooters.sort();
+    shooters.dedup();
 
-    io::stdin().read_line(&mut buffer)?;
-
-    let name: &str = buffer.trim();
-
-    let res = shots
-        .filter(shooter_name.eq(name))
-        .load::<shot::Shot>(conn)?;
-
-    for s in res {
-        println!("{:?}", s.shooter_name);
-        println!("{:?}", s.time);
-        println!("{:?}", s.game_id);
+    for shooter in shooters {
+        println!("{}", shooter);
     }
 
-    Ok(())
+    loop {
+        let mut input = String::new();
+        println!("who > ");
+
+        match io::stdin().read_line(&mut input) {
+            Ok(_) => {
+                let mut name = String::new();
+                name = input.trim().to_string();
+
+                let results = shots
+                    .filter(shooter_name.eq(&name))
+                    .load::<shot::Shot>(conn)?;
+
+                for shot_result in results {
+                    println!("{}", shot_result.time);
+                    println!("{}", shot_result.game_id);
+                }
+
+                name.clear();
+            }
+            Err(error) => println!("Error: {}", error),
+        }
+
+        input.clear();
+    }
 }
