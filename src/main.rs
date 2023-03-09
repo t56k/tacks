@@ -1,63 +1,49 @@
 #![recursion_limit = "512"]
 
 use anyhow::Result;
-use diesel::{insert_into, prelude::*};
 use std::io;
-use tacks::establish_connection;
+use tacks::*;
 
 mod game;
+mod player;
 mod schema;
 mod shot;
 
-fn import_csv(conn: &mut PgConnection) -> Result<usize> {
-    use schema::shots::dsl::*;
-
-    let mut csv_reader = csv::Reader::from_path("data/shots_2022_1.csv")?;
-    let mut new_shots: Vec<shot::NewShot> = Vec::new();
-
-    for result in csv_reader.deserialize() {
-        let new_shot: shot::NewShot = result?;
-        new_shots.push(new_shot);
-    }
-
-    Ok(insert_into(shots).values(&new_shots).execute(conn)?)
-}
-
 fn main() -> Result<()> {
-    use schema::shots::dsl::*;
-
     let conn = &mut establish_connection();
-    // let recs = import_csv(conn)?;
-
-    let mut shooters = shots.select(shooter_name).load::<String>(conn)?;
-    shooters.sort();
-    shooters.dedup();
-
-    for shooter in shooters {
-        println!("{}", shooter);
-    }
 
     loop {
-        let mut input = String::new();
         println!("> ");
 
-        match io::stdin().read_line(&mut input) {
-            Ok(_) => {
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
+
+        match input.as_str() {
+            "games" => {
+                import_games(conn, "data/all_games.csv")?;
+            }
+            "shots" => {
+                import_shots(conn, "data/shots_2022_1.csv")?;
+            }
+            "players" => {
+                let players = shot::Shot::all_shooters(conn)?;
+
+                for player in players {
+                    println!("{}", player);
+                }
+            }
+            _ => {
                 let mut name = input.trim().to_string();
+                let shots = shot::Shot::by_shooter(conn, &name)?;
 
-                let results = shots
-                    .filter(shooter_name.eq(&name))
-                    .load::<shot::Shot>(conn)?;
-
-                for shot_result in results {
-                    println!("Time: {}", shot_result.time);
-                    println!("Game: {}", shot_result.game_id);
-                    println!("Goal: {}", shot_result.goal);
+                for shot in shots {
+                    println!("Time: {}", shot.time);
+                    println!("Game: {}", shot.game_id);
+                    println!("Goal: {}", shot.goal);
                 }
 
                 name.clear();
             }
-            Err(error) => println!("Error: {}", error),
         }
 
         input.clear();

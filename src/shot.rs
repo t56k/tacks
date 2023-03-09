@@ -1,7 +1,22 @@
+use anyhow::Result;
 use diesel::prelude::*;
 use serde::*;
 
 use crate::schema::shots;
+
+impl Shot {
+    pub fn all_shooters(conn: &mut PgConnection) -> Result<Vec<String>> {
+        use crate::schema::shots::dsl::*;
+
+        Ok(shots.select(shooter_name).load::<String>(conn)?)
+    }
+
+    pub fn by_shooter(conn: &mut PgConnection, name: &String) -> Result<Vec<Shot>> {
+        use crate::schema::shots::dsl::*;
+
+        Ok(shots.filter(shooter_name.eq(&name)).load::<Self>(conn)?)
+    }
+}
 
 #[derive(Debug, Identifiable, Queryable)]
 pub struct Shot {
