@@ -11,7 +11,7 @@ impl Shot {
         Ok(shots.select(shooter_name).load::<String>(conn)?)
     }
 
-    pub fn by_shooter(conn: &mut PgConnection, name: &String) -> Result<Vec<Shot>> {
+    pub fn by_shooter(conn: &mut PgConnection, name: &str) -> Result<Vec<Shot>> {
         use crate::schema::shots::dsl::*;
 
         Ok(shots.filter(shooter_name.eq(&name)).load::<Self>(conn)?)

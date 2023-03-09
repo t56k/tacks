@@ -18,14 +18,18 @@ fn main() -> Result<()> {
         let mut input = String::new();
         io::stdin().read_line(&mut input)?;
 
-        match input.as_str() {
+        let mut cmd = input.trim();
+        match cmd {
             "games" => {
+                println!("importing games...");
                 import_games(conn, "data/all_games.csv")?;
             }
             "shots" => {
+                println!("importing shots...");
                 import_shots(conn, "data/shots_2022_1.csv")?;
             }
             "players" => {
+                println!("fetching players...");
                 let players = shot::Shot::all_shooters(conn)?;
 
                 for player in players {
@@ -33,16 +37,13 @@ fn main() -> Result<()> {
                 }
             }
             _ => {
-                let mut name = input.trim().to_string();
-                let shots = shot::Shot::by_shooter(conn, &name)?;
+                let shots = shot::Shot::by_shooter(conn, &cmd)?;
 
                 for shot in shots {
                     println!("Time: {}", shot.time);
                     println!("Game: {}", shot.game_id);
                     println!("Goal: {}", shot.goal);
                 }
-
-                name.clear();
             }
         }
 
