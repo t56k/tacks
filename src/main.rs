@@ -18,11 +18,11 @@ fn main() -> Result<()> {
         let mut input = String::new();
         io::stdin().read_line(&mut input)?;
 
-        let mut cmd = input.trim();
+        let cmd = input.trim();
         match cmd {
             "games" => {
                 println!("importing games...");
-                import_games(conn, "data/all_games.csv")?;
+                import_games(conn, "data/all_teams.csv")?;
             }
             "shots" => {
                 println!("importing shots...");
